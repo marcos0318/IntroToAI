@@ -40,6 +40,7 @@ from game import Actions
 import util
 import time
 import search
+import copy
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -266,6 +267,9 @@ def euclideanHeuristic(position, problem, info={}):
 # This portion is incomplete.  Time to write code!  #
 #####################################################
 
+
+
+
 class CornersProblem(search.SearchProblem):
     """
     This search problem finds paths through all four corners of a layout.
@@ -295,14 +299,24 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        state = (self.startingPosition[0], self.startingPosition[1], 1, 1, 1, 1)
+        return state
+
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        for i in range(2, 6):
+            if state[i] == 1:
+                return False
+        return True
+
+
+
+
+        #util.raiseNotDefined()
 
     def getSuccessors(self, state):
         """
@@ -315,18 +329,32 @@ class CornersProblem(search.SearchProblem):
             is the incremental cost of expanding to that successor
         """
 
+        "*** YOUR CODE HERE ***"
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-            # Add a successor state to the successor list if the action is legal
-            # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
+            # x, y = state[]
+            x = state[0]
+            y = state[1]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            if not self.walls[nextx][nexty]:
+                newFood = [0, 0, 0, 0]
+                for i in range(0, 4):
+                    if state[i+2] == 0:
+                        newFood[i] = 0
+                        continue
+                    elif (nextx, nexty) == self.corners[i]:
+                        newFood[i] = 0
+                        continue
+                    else:
+                        newFood[i] = 1
 
-            "*** YOUR CODE HERE ***"
+                nextState = (nextx, nexty, newFood[0], newFood[1], newFood[2], newFood[3])
 
-        self._expanded += 1 # DO NOT CHANGE
+                successors.append((nextState, action, 1))
+
+
+        self._expanded += 1  # DO NOT CHANGE
         return successors
 
     def getCostOfActions(self, actions):
@@ -417,6 +445,7 @@ class FoodSearchProblem:
                 return 999999
             cost += 1
         return cost
+
 
 class AStarFoodSearchAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"

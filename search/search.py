@@ -18,6 +18,7 @@ Pacman agents (in searchAgents.py).
 """
 
 import util
+import copy
 
 class SearchProblem:
     """
@@ -87,17 +88,125 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    visited = []
+
+    fringe = util.Stack()
+    # the format of the item in the fringe: [((xpos, ypos), 'South', 1), [how to get here]]
+
+    fringe.push([(problem.getStartState(), '???', 0), []])
+
+    while fringe.isEmpty() == 0:
+        state = fringe.pop()
+
+        notVisited = True
+        for visitedState in visited:
+            if state[0][0] == visitedState:
+                notVisited = False
+                break
+
+        if notVisited == False:
+            continue
+
+        visited.append(state[0][0])
+        position = state[0][0]
+        if problem.isGoalState(position):
+            print state[1]
+            return state[1]
+        successors = problem.getSuccessors(position)
+
+        for successor in successors:
+            nextState = [successor]
+            path = copy.deepcopy(state[1])  # This is very important
+            path.append(successor[1])
+            nextState.append(path)
+            fringe.push(nextState)
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    visited = []
+
+    fringe = util.Queue()
+    # the format of the item in the fringe: [((xpos, ypos), 'South', 1), [how to get here]]
+
+    fringe.push([(problem.getStartState(), '???', 0), []])
+
+
+    while fringe.isEmpty() == 0:
+        state = fringe.pop()
+        #  if the state in an instance of an object, the following code in not
+        #  going to distinguish the object with the same
+        #  to deal with this, we need to overload the object "=="
+        #  if state[0][0] in visited:
+           #  continue
+        notVisited = True
+        for visitedState in visited:
+            if state[0][0] == visitedState:
+                notVisited = False
+                break
+
+        if notVisited == False:
+            continue
+
+        visited.append(state[0][0])
+        position = state[0][0]
+        if problem.isGoalState(position):
+            print state[1]
+            return state[1]
+        successors = problem.getSuccessors(position)
+
+        for successor in successors:
+            nextState = [successor]
+            path = copy.deepcopy(state[1])  # This is very important
+            path.append(successor[1])
+            nextState.append(path)
+            fringe.push(nextState)
+
+
+
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    visited = []
+
+    fringe = util.PriorityQueue()
+    # the format of the item in the fringe: [((xpos, ypos), 'South', 1), [how to get here]]
+
+    fringe.push([(problem.getStartState(), '???', 0), []], 0)
+
+    while fringe.isEmpty() == 0:
+        state = fringe.pop()
+
+        notVisited = True
+        for visitedState in visited:
+            if state[0][0] == visitedState:
+                notVisited = False
+                break
+
+        if notVisited == False:
+            continue
+
+        visited.append(state[0][0])
+        position = state[0][0]
+        if problem.isGoalState(position):
+            print state[1]
+            return state[1]
+        successors = problem.getSuccessors(position)
+
+        for successor in successors:
+            nextState = [successor]
+            path = copy.deepcopy(state[1])  # This is very important
+            path.append(successor[1])
+            nextState.append(path)
+            fringe.push(nextState, problem.getCostOfActions(path))
+
+
+
+
 
 def nullHeuristic(state, problem=None):
     """
@@ -109,6 +218,33 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+
+    visited = []
+
+    fringe = util.PriorityQueue()
+    # the format of the item in the fringe: [((xpos, ypos), 'South', 1), [how to get here]]
+
+    fringe.push([(problem.getStartState(), '???', 0), []], 0)
+
+    while fringe.isEmpty() == 0:
+        state = fringe.pop()
+        if state[0][0] in visited:
+            continue
+        else:
+            visited.append(state[0][0])
+        position = state[0][0]
+        if problem.isGoalState(position):
+            print state[1]
+            return state[1]
+        successors = problem.getSuccessors(position)
+
+        for successor in successors:
+            nextState = [successor]
+            path = copy.deepcopy(state[1])  # This is very important
+            path.append(successor[1])
+            nextState.append(path)
+            fringe.push(nextState, problem.getCostOfActions(path) + heuristic(successor[0], problem))
+
     util.raiseNotDefined()
 
 
