@@ -71,10 +71,29 @@ class ReflexAgent(Agent):
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        # return successorGameState.getScore
+        newFood = newFood.asList()
+        if len(newFood) == 0:
+            return 10000
+        foodScore = min(map( lambda pos : abs(pos[0] - newPos[0]) + abs(pos[1] - newPos[1]), newFood))
+
+        dangerousRange = 2
+
+        ghostPositions = map( lambda state : state.getPosition(), newGhostStates)
+        nearestGhostDist = min(map( lambda pos : abs(pos[0] - newPos[0]) + abs(pos[1] - newPos[1]), ghostPositions))
+
+        if nearestGhostDist <= dangerousRange:
+            ghostScore = -10000000
+        else:
+            ghostScore = 0
+
+        foodNumber = len(newFood) * 1000
+
+        return - foodNumber - foodScore + ghostScore
+
+
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -129,7 +148,54 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        legalMoves = gameState.getLegalActions()
+
+        states = [gameState.generateSuccessor(0, action) for action in legalMoves]
+        scores = [self.MinimaxDispatch(state, self.depth) for state in states]
+        bestScore = max(scores)
+        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+        chosenIndex = bestIndices[0]
+
+        return legalMoves[chosenIndex]
+
+    def MinimaxDispatch(self, initState, depth):
+        return self.MinSearch(initState, depth, 1)
+
+    def MaxSearch(self, state, depth):
+        # check if the depth is 0, if so return the value of evaluation function
+        if depth <= 1:
+            return self.evaluationFunction(state)
+        # reduce the depth by 1
+        depth = depth -1
+
+        if state.isWin() or state.isLose():
+            return self.evaluationFunction(state)
+
+        # get the actions of the pacman
+        pacActions = state.getLegalActions(0)
+
+        # nextStates = map( lambda action: state.generateSuccessor(0, action), pacActions)
+        nextStates = [state.generateSuccessor(0, action) for action in pacActions]
+        score = max([self.MinSearch(state, depth, 1) for state in nextStates])
+        return score
+
+    def MinSearch(self, state, depth, numMin):
+
+        if state.isWin() or state.isLose():
+            return self.evaluationFunction(state)
+
+        Actions = state.getLegalActions(numMin)
+        nextStates = [state.generateSuccessor(numMin, action) for action in Actions]
+        numMin = numMin + 1
+
+        if numMin == state.getNumAgents():
+            score = min([self.MaxSearch(state, depth) for state in nextStates])
+        else:
+            score = min([self.MinSearch(state, depth, numMin) for state in nextStates])
+
+        return score
+
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
