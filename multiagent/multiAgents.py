@@ -124,6 +124,13 @@ class MultiAgentSearchAgent(Agent):
         self.index = 0 # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
+        self.rootActionIndex = 0
+
+    def setRootAction(self, num):
+        self.rootActionIndex = num
+
+    def getRootAction(self):
+        return self.rootActionIndex
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
@@ -204,10 +211,101 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
     def getAction(self, gameState):
         """
-          Returns the minimax action using self.depth and self.evaluationFunction
+          Returns the minimax action from the current gameState using self.depth
+          and self.evaluationFunction.
+
+          Here are some method calls that might be useful when implementing minimax.
+
+          gameState.getLegalActions(agentIndex):
+            Returns a list of legal actions for an agent
+            agentIndex=0 means Pacman, ghosts are >= 1
+
+          gameState.generateSuccessor(agentIndex, action):
+            Returns the successor game state after an agent takes an action
+
+          gameState.getNumAgents():
+            Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        legalMoves = gameState.getLegalActions()
+
+        self.MinimaxDispatch(gameState, self.depth)
+
+        chosenIndex = self.getRootAction()
+
+        return legalMoves[chosenIndex]
+
+
+    def MinimaxDispatch(self, initState, depth):
+        return self.MaxSearch(initState, depth)
+
+    def MaxSearch(self, state, depth, a=float("-inf"), b=float("inf")):
+        # check if the depth is 0, if so return the value of evaluation function
+        if depth <= 0:
+            return self.evaluationFunction(state)
+        # reduce the depth by 1
+        depth = depth - 1
+
+        if state.isWin() or state.isLose():
+            return self.evaluationFunction(state)
+
+        v = float("-inf")
+
+        # get the actions of the pacman
+        pacActions = state.getLegalActions(0)
+
+        localA = a
+        localB = b
+
+        for eachAction in pacActions:
+            eachState = state.generateSuccessor(0, eachAction)
+            minResult = self.MinSearch(eachState, depth, 1, localA, localB)
+            if v < minResult:
+                v = minResult
+                if depth == self.depth - 1:
+                    self.setRootAction(pacActions.index(eachAction))
+            if v > b:
+                return v
+            localA = max(localA, v)
+        return v
+
+    def MinSearch(self, state, depth, numMin, a=float("-inf"), b=float("inf")):
+
+        if state.isWin() or state.isLose():
+            return self.evaluationFunction(state)
+
+        Actions = state.getLegalActions(numMin)
+        # nextStates = [state.generateSuccessor(numMin, action) for action in Actions]
+        numMin = numMin + 1
+        localA = a
+        localB = b
+
+        if numMin == state.getNumAgents():
+            v = float("inf")
+            # score = min([self.MaxSearch(state, depth) for state in nextStates])
+            for eachAction in Actions:
+                eachState = state.generateSuccessor(numMin - 1, eachAction)
+                v = min(v, self.MaxSearch(eachState, depth, localA, localB))
+                if v < localA:
+                    return v
+                localB = min(localB, v)
+            return v
+
+        else:
+            v = float("inf")
+            for eachAction in Actions:
+                eachState = state.generateSuccessor(numMin - 1, eachAction)
+                v = max(v, self.MinSearch(eachState, depth, numMin, localA, localB))
+
+                if v < localA:
+                    return v
+                localB = min(localB, v)
+            return v
+
+
+
+
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
